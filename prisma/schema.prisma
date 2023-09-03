@@ -1,0 +1,136 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model Profile {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @unique
+  name String
+  imageUrl String
+  email String
+
+  servers Server[] // Reference to Server documents
+  members Member[] // Reference to Member documents
+  channels Channel[] // Reference to Channel documents
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Server {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+  imageUrl String
+  inviteCode String @unique
+
+  profileId String // Reference to Profile document
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  members Member[] // Reference to Member documents
+  channels Channel[] // Reference to Channel documents
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum MemberRole {
+  ADMIN
+  MODERATOR
+  GUEST
+}
+
+model Member {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  role MemberRole @default(GUEST)
+
+  profileId String // Reference to Profile document
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  serverId String // Reference to Server document
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  messages Message[] // Reference to Message documents
+  directMessages DirectMessage[] // Reference to DirectMessage documents
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum ChannelType {
+  TEXT
+  AUDIO
+  VIDEO
+}
+
+model Channel {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+  type ChannelType @default(TEXT)
+
+  profileId String // Reference to Profile document
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  serverId String // Reference to Server document
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  messages Message[] // Reference to Message documents
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Message {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  content String
+
+  fileUrl String?
+
+  memberId String // Reference to Member document
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  channelId String // Reference to Channel document
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  deleted Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Conversation {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  memberOneId String // Reference to Member document
+
+  memberTwoId String // Reference to Member document
+
+  directMessages DirectMessage[] // Reference to DirectMessage documents
+
+  @@unique([memberOneId, memberTwoId])
+}
+
+model DirectMessage {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  content String
+  fileUrl String?
+
+  memberId String // Reference to Member document
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  conversationId String // Reference to Conversation document
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  deleted Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

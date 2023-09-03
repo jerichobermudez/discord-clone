@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Profile {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  userId   String @unique
+  name     String
+  imageUrl String
+  email    String
+
+  servers     Server[]
+  members     Member[]
+  channels    Channel[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Server {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  imageUrl    String
+  inviteCode  String @unique
+
+  profile     Profile @relation("ProfileToServers") // Reference to Profile
+
+  members     Member[]
+  channels    Channel[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Member {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  role     MemberRole
+  profile  Profile @relation("ProfileToMembers") // Reference to Profile
+  server   Server @relation("ServerToMembers")   // Reference to Server
+
+  messages          Message[]
+  directMessages    DirectMessage[]
+
+  conversationsInitiated Conversation[] @relation("MemberOneToConversations") // Reference to Conversation
+  conversationsReceived  Conversation[] @relation("MemberTwoToConversations") // Reference to Conversation
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Channel {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  type     ChannelType
+  profile  Profile @relation("ProfileToChannels") // Reference to Profile
+  server   Server @relation("ServerToChannels")   // Reference to Server
+
+  messages Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Message {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  content   String
+  fileUrl   String?
+  member    Member @relation("MemberToMessages")   // Reference to Member
+  channel   Channel @relation("ChannelToMessages") // Reference to Channel
+  deleted   Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Conversation {
+  id           String @id @default(auto()) @map("_id") @db.ObjectId
+  memberOne    Member @relation("MemberOneToConversations") // Reference to Member
+  memberTwo    Member @relation("MemberTwoToConversations") // Reference to Member
+  directMessages DirectMessage[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model DirectMessage {
+  id           String @id @default(auto()) @map("_id") @db.ObjectId
+  content      String
+  fileUrl      String?
+  member       Member @relation("MemberToDirectMessages")   // Reference to Member
+  conversation Conversation @relation("ConversationToDirectMessages") // Reference to Conversation
+  deleted      Boolean @default(false)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
