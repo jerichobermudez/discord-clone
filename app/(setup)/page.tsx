@@ -6,22 +6,27 @@ import { redirect } from "next/navigation";
 const SetupPage = async () => {
   const profile = await initialProfile();
 
-  const server = await db.server.findFirst({
+  const server = await db.server.findMany({
     include: {
-      members: {
-        where: {
-          profileId: profile.id
-        }
-      }
+      members: true
     }
   });
 
   if (server) {
-    // const isMember = server.members.find((member: any) => member.profileId === profile.id);
+    let isServerMember = null;
+    for (const serverItems of server) {
+      if (serverItems.members.length > 0) {
+        if (serverItems.members.find((member) => member.profileId === profile.id)) {
+          isServerMember = serverItems;
 
-    // if (isMember) {
-      return redirect(`/servers/${server.id}`);
-    // }
+          break;
+        }
+      }
+    }
+
+    if (isServerMember) {
+      return redirect(`/servers/${isServerMember?.id}`);
+    }
   }
 
   return <InitialModal />;

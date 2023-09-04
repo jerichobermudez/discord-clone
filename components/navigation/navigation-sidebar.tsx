@@ -18,13 +18,22 @@ export const NavigationSidebar = async () => {
 
   const servers = await db.server.findMany({
     include: {
-      members: {
-        where: {
-          profileId: profile.id
-        }
-      }
+      members: true
     }
   });
+
+  let getServers = [];
+  for (const serverItems of servers) {
+    if (serverItems.members.length > 0) {
+      if (serverItems.members.find((member) => member.profileId === profile.id)) {
+        getServers.push(serverItems);
+      }
+    }
+  }
+
+  if (getServers.length < 1) {
+    return redirect("/");
+  }
 
   return (
     <div
@@ -36,7 +45,7 @@ export const NavigationSidebar = async () => {
       />
       <ScrollArea className="flex-1 w-full">
         {/* @ts-ignore */}
-        {servers.map((server) => (
+        {getServers.map((server) => (
           <div key={server.id} className="mb-4">
             <NavigationItem
               id={server.id}

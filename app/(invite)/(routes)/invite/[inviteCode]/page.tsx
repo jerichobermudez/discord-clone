@@ -33,7 +33,7 @@ const InviteCodePage = async ({
     }
   });
 
-  if (existingServer) {
+  if (existingServer && existingServer.members.length > 0) {
     return redirect(`/servers/${existingServer.id}`);
   }
 
