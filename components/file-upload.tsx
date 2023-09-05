@@ -9,7 +9,7 @@ import "@uploadthing/react/styles.css";
 interface FileUploadProps {
   onChange: (url?: string) => void;
   value: string;
-  endpoint: "messageFile" | "serverImage"
+  endpoint: 'messageFile' | 'serverImage'
 }
 
 export const FileUpload = ({
@@ -17,7 +17,7 @@ export const FileUpload = ({
   value,
   endpoint
 }: FileUploadProps) => {
-  const fileType = value?.split(".").pop();
+  const fileType = value?.split('.').pop();
 
   if (value && fileType !== "pdf") {
     return (
